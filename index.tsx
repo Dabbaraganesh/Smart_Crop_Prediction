@@ -1,3 +1,4 @@
+import './index.css'
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ReactDOM from 'react-dom/client';
 import html2canvas from 'html2canvas';
@@ -43,8 +44,8 @@ const ChatBot: React.FC<{ language: SupportedLanguage }> = ({ language }) => {
 
   const greetings: Record<string, string> = {
     English: "Namaste! I am Bharat Agri-AI Pro. Ask me about soil health, crop diseases, or Mandi rates.",
-    Hindi: "नमस्ते! मैं भारत एग्री-एआई प्रो हूं। मिट्टी के स्वास्थ्य, फसल रोगों या मंडी दरों के बारे में पूछें।",
-    Telugu: "నమస్తే! నేను భారత్ అగ్రి-AI ప్రో. నేల ఆరోగ్యం, పంట వ్యాధులు లేదా మండి ధరల గురించి అడగండి."
+    Hindi: "à¤¨à¤®à¤¸à¥à¤¤à¥! à¤®à¥à¤ à¤­à¤¾à¤°à¤¤ à¤à¤à¥à¤°à¥-à¤à¤à¤ à¤ªà¥à¤°à¥ à¤¹à¥à¤à¥¤ à¤®à¤¿à¤à¥à¤à¥ à¤à¥ à¤¸à¥à¤µà¤¾à¤¸à¥à¤¥à¥à¤¯, à¤«à¤¸à¤² à¤°à¥à¤à¥à¤ à¤¯à¤¾ à¤®à¤à¤¡à¥ à¤¦à¤°à¥à¤ à¤à¥ à¤¬à¤¾à¤°à¥ à¤®à¥à¤ à¤ªà¥à¤à¥à¤à¥¤",
+    Telugu: "à°¨à°®à°¸à±à°¤à±! à°¨à±à°¨à± à°­à°¾à°°à°¤à± à°à°à±à°°à°¿-AI à°ªà±à°°à±. à°¨à±à°² à°à°°à±à°à±à°¯à°, à°ªà°à° à°µà±à°¯à°¾à°§à±à°²à± à°²à±à°¦à°¾ à°®à°à°¡à°¿ à°§à°°à°² à°à±à°°à°¿à°à°à°¿ à°à°¡à°à°à°¡à°¿."
   };
 
   useEffect(() => {
@@ -149,7 +150,7 @@ const ResultCard: React.FC<{ result: PredictionResult; inputs: CropInputs }> = (
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-slate-50 p-6 rounded-3xl">
              <div><span className="text-[8px] uppercase text-slate-400 font-black block mb-1">Location</span><span className="font-bold text-sm">{inputs.city}</span></div>
-             <div><span className="text-[8px] uppercase text-slate-400 font-black block mb-1">Temp</span><span className="font-bold text-sm">{inputs.temperature}°C</span></div>
+             <div><span className="text-[8px] uppercase text-slate-400 font-black block mb-1">Temp</span><span className="font-bold text-sm">{inputs.temperature}Â°C</span></div>
              <div><span className="text-[8px] uppercase text-slate-400 font-black block mb-1">Rainfall</span><span className="font-bold text-sm">{inputs.rainfall}mm</span></div>
              <div><span className="text-[8px] uppercase text-slate-400 font-black block mb-1">pH</span><span className="font-bold text-sm">{inputs.ph}</span></div>
           </div>
