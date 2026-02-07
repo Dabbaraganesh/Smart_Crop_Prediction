@@ -1,0 +1,7 @@
+{
+  "name": "Smart Crop Prediction System",
+  "description": "An AI-powered agricultural advisor designed for Indian farmers to recommend optimal crops based on soil and weather parameters like temperature, humidity, rainfall, and pH levels.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

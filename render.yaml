@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: bharat-agri-ai
+    env: static
+    buildCommand: # Render detects npm install & build automatically for static sites
+    publishPath: .
+    envVars:
+      - key: API_KEY
+        sync: false # Set this in the Render Dashboard UI for security
+    headers:
+      - path: /*
+        headers:
+          - key: Cache-Control
+            value: no-cache
