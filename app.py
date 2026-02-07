@@ -10,6 +10,7 @@ load_dotenv()
 app = Flask(__name__, static_folder=".", static_url_path="", template_folder=".")
 
 # Configure Gemini API
+# Support both API_KEY (Standard) and GEMINI_API_KEY (Common alternative)
 API_KEY = os.environ.get("API_KEY") or os.environ.get("GEMINI_API_KEY")
 if API_KEY:
     genai.configure(api_key=API_KEY)
@@ -17,7 +18,7 @@ if API_KEY:
 def clean_json_response(text):
     """
     Strips markdown and extracts the first valid JSON object found in the text.
-    This prevents 'missing output' errors caused by AI formatting.
+    This prevents 'missing output' or 'white screen' errors caused by AI formatting.
     """
     try:
         # Match anything between the first { and the last }
@@ -40,7 +41,7 @@ def serve_index():
 def predict():
     try:
         if not API_KEY:
-            return jsonify({"error": "API Key missing in environment variables"}), 500
+            return jsonify({"error": "API Key missing in environment variables. Please add API_KEY to your Render/Vercel settings."}), 500
 
         data = request.json
         prompt = f"""
@@ -53,7 +54,7 @@ def predict():
         Include current Mandi price range in ₹ (Rupees) in the productivityBenefit field.
         """
         
-        # Using the latest Gemini 3 Flash model for speed and accuracy
+        # Using the latest Gemini 3 Flash model for high-speed precision
         model = genai.GenerativeModel('gemini-3-flash-preview')
         
         response = model.generate_content(
@@ -74,6 +75,9 @@ def predict():
 @app.route('/api/chat', methods=['POST'])
 def chat():
     try:
+        if not API_KEY:
+            return jsonify({"error": "API Key missing"}), 500
+            
         data = request.json
         model = genai.GenerativeModel('gemini-3-flash-preview')
         
@@ -86,7 +90,7 @@ def chat():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Vercel requires the app instance to be available as 'app'
+# Ensure the app object is available for both Gunicorn and Vercel
 app = app
 
 if __name__ == '__main__':

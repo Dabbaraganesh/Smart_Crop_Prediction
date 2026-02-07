@@ -2,11 +2,10 @@ services:
   - type: web
     name: bharat-agri-ai
     env: python
-    pythonVersion: 3.10.0
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
       - key: API_KEY
         sync: false
       - key: PYTHON_VERSION
-        value: 3.10.0
+        value: 3.10.12
