@@ -2,5 +2,8 @@
   "name": "bharat-agri-ai",
   "version": "1.0.0",
   "private": true,
-  "description": "Smart Crop Prediction System"
+  "description": "Smart Crop Prediction System",
+  "scripts": {
+    "build": "echo 'No build step required: Using in-browser Babel transpilation.'"
+  }
 }
