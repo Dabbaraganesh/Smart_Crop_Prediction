@@ -1,8 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import InputSection from './components/InputSection';
 import ResultCard from './components/ResultCard';
-import ChatBot from './components/ChatBot';
-import { CropInputs, PredictionResult, SupportedLanguage } from './types';
+import { CropInputs, PredictionResult } from './types';
 import { getCropRecommendation } from './services/geminiService';
 
 const App: React.FC = () => {
@@ -21,15 +20,6 @@ const App: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setInputs(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleLocationDetected = (city: string, lat: number, lng: number) => {
-    setInputs(prev => ({
-      ...prev,
-      city,
-      latitude: lat,
-      longitude: lng
-    }));
   };
 
   const fillDemoData = () => {
@@ -101,7 +91,6 @@ const App: React.FC = () => {
               onChange={handleInputChange} 
               onSubmit={handleSubmit} 
               isLoading={isLoading} 
-              onLocationDetected={handleLocationDetected}
             />
           </section>
 
@@ -138,21 +127,6 @@ const App: React.FC = () => {
                 <p className="text-slate-500 font-medium max-w-md leading-relaxed">
                   Enter your <strong className="text-slate-800">City or District</strong> and soil metrics to generate a localized report with real-time Indian Mandi rates.
                 </p>
-                
-                <div className="mt-12 flex flex-wrap justify-center gap-6 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700">
-                    <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl">
-                        <i className="fa-solid fa-location-arrow text-emerald-600"></i>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Pinpoint</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl">
-                        <i className="fa-solid fa-bolt text-amber-500"></i>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Real-time</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl">
-                        <i className="fa-solid fa-language text-blue-500"></i>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Multi-lang</span>
-                    </div>
-                </div>
               </div>
             )}
           </section>
@@ -166,7 +140,6 @@ const App: React.FC = () => {
           </div>
         </footer>
       </div>
-      <ChatBot language={inputs.language} />
     </div>
   );
 };

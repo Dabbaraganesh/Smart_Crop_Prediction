@@ -1,7 +1,5 @@
 {
-  "name": "Bharat Agri-AI Pro",
-  "description": "Professional agricultural analytics and crop prediction system for the Indian subcontinent, powered by Gemini 3 Flash.",
-  "requestFramePermissions": [
-    "geolocation"
-  ]
+  "requestFramePermissions": [],
+  "name": "",
+  "description": ""
 }

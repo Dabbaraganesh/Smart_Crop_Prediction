@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { CropInputs, SupportedLanguage } from '../types';
 
 interface InputSectionProps {
@@ -7,12 +6,9 @@ interface InputSectionProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
-  onLocationDetected: (city: string, lat: number, lng: number) => void;
 }
 
-const InputSection: React.FC<InputSectionProps> = ({ inputs, onChange, onSubmit, isLoading, onLocationDetected }) => {
-  const [isDetecting, setIsDetecting] = useState(false);
-
+const InputSection: React.FC<InputSectionProps> = ({ inputs, onChange, onSubmit, isLoading }) => {
   const languageOptions: { value: SupportedLanguage; label: string }[] = [
     { value: 'English', label: 'English' },
     { value: 'Hindi', label: 'Hindi (हिन्दी)' },
@@ -24,39 +20,9 @@ const InputSection: React.FC<InputSectionProps> = ({ inputs, onChange, onSubmit,
     { value: 'Malayalam', label: 'Malayalam (മലയാളം)' },
     { value: 'Punjabi', label: 'Punjabi (ਪੰਜਾਬੀ)' },
     { value: 'Gujarati', label: 'Gujarati (ગુજરાતી)' },
-    { value: 'Odia', label: 'Odia (ଓଡ଼ିਆ)' },
+    { value: 'Odia', label: 'Odia (ଓଡ଼ିଆ)' },
     { value: 'Assamese', label: 'Assamese (অসমীয়া)' },
   ];
-
-  const handleDetectLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
-
-    setIsDetecting(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`);
-          const data = await response.json();
-          const city = data.address.city || data.address.town || data.address.district || data.address.state || "Unknown City";
-          onLocationDetected(city, latitude, longitude);
-        } catch (err) {
-          console.error("Failed to fetch city name", err);
-          onLocationDetected("Detected Location", latitude, longitude);
-        } finally {
-          setIsDetecting(false);
-        }
-      },
-      (error) => {
-        console.error(error);
-        alert("Unable to retrieve your location. Please enter your city manually.");
-        setIsDetecting(false);
-      }
-    );
-  };
 
   const fields = [
     { label: 'Temperature (°C)', name: 'temperature', icon: 'fa-temperature-high', color: 'text-orange-500', placeholder: 'e.g. 28', hint: 'North: 10-45°C' },
@@ -93,21 +59,10 @@ const InputSection: React.FC<InputSectionProps> = ({ inputs, onChange, onSubmit,
 
         {/* Location Input */}
         <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="text-xs font-black text-slate-700 uppercase tracking-widest flex items-center">
-              <i className="fa-solid fa-location-dot mr-2 text-red-500"></i>
-              City / District (All India)
-            </label>
-            <button
-              type="button"
-              onClick={handleDetectLocation}
-              disabled={isDetecting}
-              className="text-[10px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-widest flex items-center gap-1 transition-all"
-            >
-              <i className={`fa-solid ${isDetecting ? 'fa-spinner animate-spin' : 'fa-crosshairs'}`}></i>
-              {isDetecting ? 'Detecting...' : 'Detect'}
-            </button>
-          </div>
+          <label className="text-xs font-black text-slate-700 uppercase tracking-widest flex items-center">
+            <i className="fa-solid fa-location-dot mr-2 text-red-500"></i>
+            City / District (All India)
+          </label>
           <input
             type="text"
             name="city"

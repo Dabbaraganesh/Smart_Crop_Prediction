@@ -1,7 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { PredictionResult, CropInputs } from '../types';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 
 interface ResultCardProps {
   result: PredictionResult;
@@ -9,8 +7,6 @@ interface ResultCardProps {
 }
 
 const ResultCard: React.FC<ResultCardProps> = ({ result, inputs }) => {
-  const [isGenerating, setIsGenerating] = useState(false);
-
   const reportId = useMemo(() => {
     const prefix = "BA-INTEL";
     const timestamp = Date.now().toString(36).toUpperCase();
@@ -40,64 +36,6 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, inputs }) => {
       }
       return part;
     });
-  };
-
-  const handleDownloadPdf = async () => {
-    const element = document.getElementById('printable-report');
-    if (!element) return;
-
-    setIsGenerating(true);
-    try {
-      // Create a high-fidelity capture optimized for A4 proportions
-      // We force a specific width in the clone to ensure mobile devices don't trigger small-screen layouts
-      const canvas = await html2canvas(element, {
-        scale: 2.5, // Ultra-high resolution
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: 1200, // Forces a 'Desktop-style' width for professional layout
-        onclone: (clonedDoc) => {
-          const el = clonedDoc.getElementById('printable-report');
-          if (el) {
-            el.style.width = '1000px'; 
-            el.style.maxWidth = 'none';
-            el.style.borderRadius = '0';
-            el.style.boxShadow = 'none';
-            el.style.margin = '0';
-          }
-        }
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10; 
-      const imgWidth = pageWidth - (margin * 2);
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      let heightLeft = imgHeight;
-      let position = margin;
-
-      // Add the captured image to the PDF, handling multi-page if necessary
-      pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
-      heightLeft -= (pageHeight - (margin * 2));
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight + margin;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
-        heightLeft -= (pageHeight - (margin * 2));
-      }
-
-      pdf.save(`BharatAgri_Report_${result.recommendedCrop.replace(/\s+/g, '_')}_${reportId}.pdf`);
-    } catch (error) {
-      console.error('High-Res PDF Export Failed:', error);
-      alert('Visual rendering failed on this device. Please use the Print option.');
-    } finally {
-      setIsGenerating(false);
-    }
   };
 
   const dateStr = new Date().toLocaleDateString('en-IN', {
@@ -277,31 +215,6 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, inputs }) => {
              </p>
           </div>
         </div>
-      </div>
-
-      {/* Interactive UI Controls (Excluded from Print) */}
-      <div className="mt-16 flex flex-col sm:flex-row gap-6 no-print w-full justify-center px-6 max-w-2xl pb-20">
-        <button 
-          onClick={handleDownloadPdf}
-          disabled={isGenerating}
-          className={`flex-1 px-10 py-7 rounded-[2.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-6 group ${isGenerating ? 'bg-slate-700 cursor-wait' : 'bg-slate-950 text-white hover:bg-black'}`}
-        >
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg ${isGenerating ? 'bg-slate-600' : 'bg-emerald-600 group-hover:rotate-6 group-hover:bg-emerald-500'}`}>
-            <i className={`fa-solid ${isGenerating ? 'fa-circle-notch animate-spin' : 'fa-file-pdf'} text-2xl`}></i>
-          </div>
-          <div className="text-left">
-             <div className="text-[9px] font-black uppercase tracking-[0.4em] opacity-60">High-Fidelity Export</div>
-             <div className="text-xl font-black tracking-tighter">{isGenerating ? 'Finalizing...' : 'Download Analysis PDF'}</div>
-          </div>
-        </button>
-
-        <button 
-          onClick={() => window.print()}
-          className="px-10 py-5 text-slate-500 font-black text-[10px] uppercase tracking-[0.3em] hover:text-emerald-700 transition-all flex items-center justify-center gap-4 bg-white rounded-[2rem] border-2 border-slate-50 hover:border-emerald-100 shadow-sm"
-        >
-          <i className="fa-solid fa-print"></i>
-          Standard Print
-        </button>
       </div>
     </div>
   );

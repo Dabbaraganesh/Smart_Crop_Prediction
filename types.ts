@@ -1,4 +1,3 @@
-
 export type SupportedLanguage = 
   | 'English' 
   | 'Hindi' 
@@ -20,8 +19,6 @@ export interface CropInputs {
   rainfall: string;
   ph: string;
   language: SupportedLanguage;
-  latitude?: number;
-  longitude?: number;
 }
 
 export interface GroundingSource {

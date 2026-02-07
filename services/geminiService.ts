@@ -17,28 +17,3 @@ export const getCropRecommendation = async (inputs: CropInputs): Promise<Predict
 
   return await response.json();
 };
-
-/**
- * Chat logic calling the Flask API.
- */
-export const sendChatMessage = async (message: string, language: SupportedLanguage) => {
-  const response = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, language })
-  });
-
-  if (!response.ok) throw new Error("Chat service unavailable");
-  return await response.json();
-};
-
-/**
- * Placeholder for compatibility with existing ChatBot component.
- */
-export const createAgriculturalChat = (language: SupportedLanguage) => {
-  return {
-    sendMessage: async ({ message }: { message: string }) => {
-      return await sendChatMessage(message, language);
-    }
-  };
-};
