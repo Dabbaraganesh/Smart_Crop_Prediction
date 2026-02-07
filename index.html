@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bharat Agri-AI | Professional Crop Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Noto+Sans:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans+Kannada:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -26,24 +27,13 @@
             font-family: 'Playfair Display', serif;
         }
 
-        /* Pearl Clarity Shadows */
         .shadow-pearl {
             box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05), 0 0 20px rgba(0, 0, 0, 0.02);
         }
 
         @media print {
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-            }
             .no-print { display: none !important; }
-            body { 
-                background: white !important; 
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            
+            body { background: white !important; margin: 0 !important; padding: 0 !important; }
             #printable-report {
                 border-radius: 0 !important;
                 border: none !important;
@@ -51,32 +41,10 @@
                 width: 100% !important;
                 max-width: 100% !important;
                 margin: 0 !important;
-                padding: 0 !important;
-                min-height: 100vh;
-                display: flex !important;
-                flex-direction: column !important;
                 background: white !important;
             }
-
-            .print-padding {
-                padding: 1.5cm 2cm !important;
-            }
-
-            .print-break-avoid {
-                break-inside: avoid;
-            }
-
-            @page { 
-                margin: 0;
-                size: A4 portrait;
-            }
+            @page { margin: 0; size: A4 portrait; }
         }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
 
         .gold-seal-gradient {
             background: linear-gradient(135deg, #d4af37 0%, #f1c40f 50%, #d4af37 100%);
@@ -97,5 +65,6 @@
 </head>
 <body>
     <div id="root"></div>
+    <script type="text/babel" data-type="module" src="index.tsx"></script>
 </body>
 </html>

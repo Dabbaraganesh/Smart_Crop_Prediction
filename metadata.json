@@ -1,6 +1,6 @@
 {
-  "name": "Smart Crop Prediction System",
-  "description": "An AI-powered agricultural advisor designed for Indian farmers to recommend optimal crops based on soil and weather parameters like temperature, humidity, rainfall, and pH levels.",
+  "name": "Bharat Agri-AI Pro",
+  "description": "Professional agricultural analytics and crop prediction system for the Indian subcontinent, powered by Gemini 3 Flash.",
   "requestFramePermissions": [
     "geolocation"
   ]
