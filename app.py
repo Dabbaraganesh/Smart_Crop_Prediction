@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import google.generativeai as genai
 from flask import Flask, request, jsonify, send_from_directory, Response
 from dotenv import load_dotenv
@@ -15,13 +16,20 @@ if not API_KEY:
 
 genai.configure(api_key=API_KEY)
 
+def clean_json_response(text):
+    """Helper to strip markdown backticks and extract pure JSON."""
+    # Remove markdown code block markers
+    text = re.sub(r'```json\s*', '', text)
+    text = re.sub(r'```\s*', '', text)
+    return text.strip()
+
 @app.route('/')
 def serve_index():
     return send_from_directory('.', 'index.html')
 
 @app.route('/<path:path>')
 def serve_static(path):
-    # For browser ESM + Babel Standalone, serve as text/plain or text/javascript
+    # Ensure TSX files are served as plain text for Babel to handle
     if path.endswith('.tsx') or path.endswith('.ts'):
         try:
             full_path = os.path.join(os.path.dirname(__file__), path)
@@ -40,35 +48,41 @@ def predict():
         Act as a professional Indian Agricultural Data Scientist.
         Context: Local farmer in {data.get('city', 'India')} needs a crop recommendation.
         Environment Data:
-        - Temp: {data.get('temperature')}°C
+        - Temperature: {data.get('temperature')}°C
         - Humidity: {data.get('humidity')}%
         - Rainfall: {data.get('rainfall')}mm
         - Soil pH: {data.get('ph')}
-        - Language: {data.get('language', 'English')}
+        - Output Language: {data.get('language', 'English')}
 
         Requirements:
-        1. Predict the single best crop.
-        2. Provide a detailed scientific reason.
-        3. Provide productivity benefits including current Mandi rates in ₹ (Rupees) using search for recent accuracy.
-        4. Return as JSON.
+        1. Predict exactly ONE optimal crop.
+        2. Provide a detailed scientific reason for the choice.
+        3. Include productivity benefits and CURRENT Mandi (market) price range in ₹ (Rupees).
+        4. YOU MUST return the response as a valid JSON object only.
 
-        Output Schema:
+        Expected JSON structure:
         {{
-          "recommendedCrop": "string",
-          "reason": "string",
-          "productivityBenefit": "string"
+          "recommendedCrop": "Crop Name",
+          "reason": "Scientific explanation here...",
+          "productivityBenefit": "Economic benefits and price range (e.g. ₹2000-2500 per quintal)..."
         }}
         """
         
-        # Use gemini-3-flash-preview with googleSearch for grounding
+        # Use a stable model version for predictable JSON output
         model = genai.GenerativeModel(
-            model_name='gemini-3-flash-preview',
+            model_name='gemini-1.5-flash',
             tools=[{'google_search': {}}]
         )
         
-        response = model.generate_content(prompt)
+        response = model.generate_content(
+            prompt,
+            generation_config={"response_mime_type": "application/json"}
+        )
         
-        # Extract grounding sources if available
+        cleaned_text = clean_json_response(response.text)
+        result = json.loads(cleaned_text)
+        
+        # Extract grounding sources if search was triggered
         sources = []
         if hasattr(response, 'candidates') and response.candidates:
             metadata = getattr(response.candidates[0], 'grounding_metadata', None)
@@ -76,26 +90,23 @@ def predict():
                 for chunk in metadata.grounding_chunks:
                     if hasattr(chunk, 'web') and chunk.web:
                         sources.append({
-                            "title": chunk.web.title or "Market Report",
+                            "title": chunk.web.title or "Market Data Source",
                             "uri": chunk.web.uri
                         })
-
-        # Parse JSON from text
-        result = json.loads(response.text)
-        result['sources'] = sources
         
+        result['sources'] = sources
         return jsonify(result)
     except Exception as e:
         print(f"Prediction Error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
     try:
         data = request.json
-        model = genai.GenerativeModel('gemini-3-flash-preview')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
-        instr = f"You are Bharat Agri-AI Pro, a professional expert advisor for Indian agriculture. You are currently speaking with a farmer in {data.get('language', 'English')}."
+        instr = f"You are Bharat Agri-AI Pro, a professional expert advisor for Indian agriculture. Communicate in {data.get('language', 'English')}."
         response = model.generate_content(
             data.get('message'),
             generation_config={"system_instruction": instr}
