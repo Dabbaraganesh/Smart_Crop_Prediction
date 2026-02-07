@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bharat Agri-AI | Professional Crop Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
@@ -25,21 +24,10 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "html2canvas": "https://esm.sh/html2canvas@1.4.1",
-    "jspdf": "https://esm.sh/jspdf@2.5.1",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/"
-  }
-}
-</script>
-</head>
+    </head>
 <body>
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
     <!-- Load main script as a module so the importmap is respected -->
     <script type="text/babel" data-type="module" src="index.tsx"></script>
 </body>
