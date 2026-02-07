@@ -12,14 +12,30 @@ app = Flask(__name__, static_folder=".", static_url_path="", template_folder="."
 # Configure Gemini API
 API_KEY = os.environ.get("API_KEY")
 if not API_KEY:
-    print("CRITICAL: API_KEY not found in environment variables.")
+    # Fallback for some environments
+    API_KEY = os.environ.get("GEMINI_API_KEY")
 
-genai.configure(api_key=API_KEY)
+if API_KEY:
+    genai.configure(api_key=API_KEY)
+else:
+    print("CRITICAL ERROR: No API Key provided in environment variables.")
 
 def clean_json_response(text):
-    """Helper to strip markdown backticks and extract pure JSON."""
-    # Remove markdown code block markers
-    text = re.sub(r'```json\s*', '', text)
+    """
+    Cleans the AI response to ensure it's a valid JSON string.
+    Removes markdown markers like ```json ... ```
+    """
+    # Find the first { and the last }
+    try:
+        start_idx = text.find('{')
+        end_idx = text.rfind('}')
+        if start_idx != -1 and end_idx != -1:
+            return text[start_idx:end_idx + 1]
+    except Exception:
+        pass
+    
+    # Fallback regex cleaning
+    text = re.sub(r'```(?:json)?\s*', '', text)
     text = re.sub(r'```\s*', '', text)
     return text.strip()
 
@@ -29,7 +45,7 @@ def serve_index():
 
 @app.route('/<path:path>')
 def serve_static(path):
-    # Ensure TSX files are served as plain text for Babel to handle
+    # Support for Babel transpilation on shared hosting
     if path.endswith('.tsx') or path.endswith('.ts'):
         try:
             full_path = os.path.join(os.path.dirname(__file__), path)
@@ -43,77 +59,67 @@ def serve_static(path):
 @app.route('/api/predict', methods=['POST'])
 def predict():
     try:
+        if not API_KEY:
+            return jsonify({"error": "API Key not configured on server"}), 500
+
         data = request.json
+        # Precise engineering of the prompt to ensure JSON compliance
         prompt = f"""
-        Act as a professional Indian Agricultural Data Scientist.
-        Context: Local farmer in {data.get('city', 'India')} needs a crop recommendation.
-        Environment Data:
+        System: Act as the Lead Agricultural Scientist at Bharat Agri-AI.
+        Task: Provide a localized crop recommendation.
+        
+        Parameters:
+        - City/District: {data.get('city')}
         - Temperature: {data.get('temperature')}°C
         - Humidity: {data.get('humidity')}%
         - Rainfall: {data.get('rainfall')}mm
         - Soil pH: {data.get('ph')}
-        - Output Language: {data.get('language', 'English')}
+        - Preferred Language: {data.get('language', 'English')}
 
-        Requirements:
-        1. Predict exactly ONE optimal crop.
-        2. Provide a detailed scientific reason for the choice.
-        3. Include productivity benefits and CURRENT Mandi (market) price range in ₹ (Rupees).
-        4. YOU MUST return the response as a valid JSON object only.
-
-        Expected JSON structure:
+        Output Requirement: You MUST respond ONLY with a JSON object.
+        JSON Structure:
         {{
-          "recommendedCrop": "Crop Name",
-          "reason": "Scientific explanation here...",
-          "productivityBenefit": "Economic benefits and price range (e.g. ₹2000-2500 per quintal)..."
+          "recommendedCrop": "Specific Crop Name",
+          "reason": "Detailed scientific explanation in {data.get('language', 'English')}",
+          "productivityBenefit": "Economic benefits and current Mandi price estimate (₹) in {data.get('language', 'English')}"
         }}
         """
         
-        # Use a stable model version for predictable JSON output
-        model = genai.GenerativeModel(
-            model_name='gemini-1.5-flash',
-            tools=[{'google_search': {}}]
-        )
+        # Use gemini-3-flash-preview as per system instructions
+        model = genai.GenerativeModel('gemini-3-flash-preview')
         
         response = model.generate_content(
             prompt,
             generation_config={"response_mime_type": "application/json"}
         )
         
-        cleaned_text = clean_json_response(response.text)
-        result = json.loads(cleaned_text)
+        # Defensive parsing
+        raw_text = response.text
+        cleaned_json = clean_json_response(raw_text)
+        result = json.loads(cleaned_json)
         
-        # Extract grounding sources if search was triggered
-        sources = []
-        if hasattr(response, 'candidates') and response.candidates:
-            metadata = getattr(response.candidates[0], 'grounding_metadata', None)
-            if metadata and hasattr(metadata, 'grounding_chunks'):
-                for chunk in metadata.grounding_chunks:
-                    if hasattr(chunk, 'web') and chunk.web:
-                        sources.append({
-                            "title": chunk.web.title or "Market Data Source",
-                            "uri": chunk.web.uri
-                        })
-        
-        result['sources'] = sources
         return jsonify(result)
     except Exception as e:
-        print(f"Prediction Error: {e}")
+        print(f"Prediction Error: {str(e)}")
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
     try:
         data = request.json
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-3-flash-preview')
         
-        instr = f"You are Bharat Agri-AI Pro, a professional expert advisor for Indian agriculture. Communicate in {data.get('language', 'English')}."
+        system_instr = f"You are Bharat Agri-AI Pro. Provide professional farming advice in {data.get('language', 'English')}."
         response = model.generate_content(
             data.get('message'),
-            generation_config={"system_instruction": instr}
+            generation_config={"system_instruction": system_instr}
         )
         return jsonify({"text": response.text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Entry point for Vercel
+app = app
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))

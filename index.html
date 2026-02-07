@@ -22,7 +22,6 @@
         }
         .royal-serif { font-family: 'Playfair Display', serif; }
         .shadow-pearl { box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05), 0 0 20px rgba(0, 0, 0, 0.02); }
-        .gold-seal-gradient { background: linear-gradient(135deg, #d4af37 0%, #f1c40f 50%, #d4af37 100%); }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
@@ -41,7 +40,7 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- Babel configuration to handle TSX transpilation in-browser for this production demo -->
+    <!-- Load main script as a module so the importmap is respected -->
     <script type="text/babel" data-type="module" src="index.tsx"></script>
 </body>
 </html>
