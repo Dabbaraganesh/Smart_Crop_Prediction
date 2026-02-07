@@ -23,12 +23,14 @@ def serve_index():
 # Special handler for .tsx files to serve them as ESM modules
 @app.route('/<path:path>')
 def serve_static(path):
+    # Ensure standard static files are served correctly
     if path.endswith('.tsx'):
-        # In a real production environment with bundling, this wouldn't be needed.
-        # But for this rapid deployment, we serve the file with the JS mime-type.
-        with open(os.path.join('.', path), 'r') as f:
-            content = f.read()
-        return Response(content, mimetype='application/javascript')
+        try:
+            with open(os.path.join(os.path.dirname(__file__), path), 'r') as f:
+                content = f.read()
+            return Response(content, mimetype='application/javascript')
+        except FileNotFoundError:
+            return "File not found", 404
     return send_from_directory('.', path)
 
 @app.route('/api/predict', methods=['POST'])
@@ -36,35 +38,18 @@ def predict():
     try:
         data = request.json
         prompt = f"""
-        You are a world-class Indian Agricultural Scientist. 
-        Target Language: {data.get('language', 'English')}
+        You are an expert Indian Agricultural Scientist. 
+        Language: {data.get('language', 'English')}
         Location: {data.get('city', 'India')}
         
-        Soil/Weather Metrics:
-        - Temp: {data.get('temperature')}°C
-        - Humidity: {data.get('humidity')}%
-        - Rainfall: {data.get('rainfall')}mm
-        - pH: {data.get('ph')}
+        Metrics:
+        - Temp: {data.get('temperature')}°C, Humidity: {data.get('humidity')}%, Rainfall: {data.get('rainfall')}mm, pH: {data.get('ph')}
         
-        TASK:
-        1. Predict the most profitable crop.
-        2. Provide a scientific rationale.
-        3. Include economic benefits with Mandi rates in ₹.
-        
-        OUTPUT FORMAT (Strict JSON):
-        {{
-          "recommendedCrop": "Crop Name",
-          "reason": "Rationale...",
-          "productivityBenefit": "Economic forecast..."
-        }}
+        Provide a crop recommendation in JSON format.
+        Include realistic Mandi prices in ₹.
         """
         
-        # Use gemini-3-flash-preview for high speed and search grounding
-        model = genai.GenerativeModel(
-            model_name='gemini-3-flash-preview',
-            tools=[{'google_search': {}}]
-        )
-        
+        model = genai.GenerativeModel('gemini-1.5-flash') # Using 1.5-flash for maximum stability on free tiers
         response = model.generate_content(
             prompt,
             generation_config={"response_mime_type": "application/json"}
@@ -72,25 +57,16 @@ def predict():
         
         return jsonify(json.loads(response.text))
     except Exception as e:
-        print(f"Error in predict: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
     try:
         data = request.json
-        user_message = data.get('message')
-        language = data.get('language', 'English')
-        
-        model = genai.GenerativeModel(
-            model_name='gemini-3-flash-preview',
-            system_instruction=f"You are Bharat Agri-AI Pro. Assist the farmer in {language}. Use real-time Mandi data. Bold all currency: **₹ 50,000**."
-        )
-        
-        response = model.generate_content(user_message)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(data.get('message'))
         return jsonify({"text": response.text})
     except Exception as e:
-        print(f"Error in chat: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
