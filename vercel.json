@@ -6,7 +6,15 @@
       "use": "@vercel/python"
     },
     {
-      "src": "index.html",
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.tsx",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.json",
       "use": "@vercel/static"
     }
   ],
@@ -14,6 +22,14 @@
     {
       "src": "/api/(.*)",
       "dest": "app.py"
+    },
+    {
+      "src": "/index.tsx",
+      "dest": "/index.tsx"
+    },
+    {
+      "src": "/metadata.json",
+      "dest": "/metadata.json"
     },
     {
       "src": "/(.*)",

@@ -2,10 +2,5 @@
   "name": "bharat-agri-ai",
   "version": "1.0.0",
   "private": true,
-  "description": "Smart Crop Prediction System",
-  "devDependencies": {
-    "tailwindcss": "^3.4.0",
-    "postcss": "^8.4.0",
-    "autoprefixer": "^10.4.0"
-  }
+  "description": "Smart Crop Prediction System"
 }
