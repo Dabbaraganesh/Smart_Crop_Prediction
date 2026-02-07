@@ -1,7 +1,7 @@
 import os
 import json
 import google.generativeai as genai
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Response
 from dotenv import load_dotenv
 
 # Load local environment variables
@@ -20,8 +20,15 @@ genai.configure(api_key=API_KEY)
 def serve_index():
     return send_from_directory('.', 'index.html')
 
+# Special handler for .tsx files to serve them as ESM modules
 @app.route('/<path:path>')
 def serve_static(path):
+    if path.endswith('.tsx'):
+        # In a real production environment with bundling, this wouldn't be needed.
+        # But for this rapid deployment, we serve the file with the JS mime-type.
+        with open(os.path.join('.', path), 'r') as f:
+            content = f.read()
+        return Response(content, mimetype='application/javascript')
     return send_from_directory('.', path)
 
 @app.route('/api/predict', methods=['POST'])
@@ -52,6 +59,7 @@ def predict():
         }}
         """
         
+        # Use gemini-3-flash-preview for high speed and search grounding
         model = genai.GenerativeModel(
             model_name='gemini-3-flash-preview',
             tools=[{'google_search': {}}]
@@ -64,6 +72,7 @@ def predict():
         
         return jsonify(json.loads(response.text))
     except Exception as e:
+        print(f"Error in predict: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/chat', methods=['POST'])
@@ -75,13 +84,13 @@ def chat():
         
         model = genai.GenerativeModel(
             model_name='gemini-3-flash-preview',
-            system_instruction=f"You are Bharat Agri-AI Pro. Assist the farmer in {language}. Provide specific Indian farming advice. Use bold ₹ for currency."
+            system_instruction=f"You are Bharat Agri-AI Pro. Assist the farmer in {language}. Use real-time Mandi data. Bold all currency: **₹ 50,000**."
         )
         
-        # In a real app, you'd manage history here. For now, we do single turns.
         response = model.generate_content(user_message)
         return jsonify({"text": response.text})
     except Exception as e:
+        print(f"Error in chat: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
