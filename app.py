@@ -21,12 +21,12 @@ def serve_index():
 
 @app.route('/<path:path>')
 def serve_static(path):
+    # For browser ESM + Babel Standalone, serve as text/plain or text/javascript
     if path.endswith('.tsx') or path.endswith('.ts'):
         try:
             full_path = os.path.join(os.path.dirname(__file__), path)
             with open(full_path, 'r') as f:
                 content = f.read()
-            # We use text/plain or application/javascript; Babel standalone handles it.
             return Response(content, mimetype='text/plain')
         except FileNotFoundError:
             return "File not found", 404
@@ -37,30 +37,54 @@ def predict():
     try:
         data = request.json
         prompt = f"""
-        Act as an expert Indian Agricultural Scientist. 
-        Input Metrics for {data.get('city', 'this region')}:
-        - Temperature: {data.get('temperature')}°C
+        Act as a professional Indian Agricultural Data Scientist.
+        Context: Local farmer in {data.get('city', 'India')} needs a crop recommendation.
+        Environment Data:
+        - Temp: {data.get('temperature')}°C
         - Humidity: {data.get('humidity')}%
         - Rainfall: {data.get('rainfall')}mm
         - Soil pH: {data.get('ph')}
-        - Target Language: {data.get('language', 'English')}
+        - Language: {data.get('language', 'English')}
 
-        Task: Recommend ONE optimal crop for these conditions.
-        Format your response as a JSON object with:
-        - recommendedCrop (string)
-        - reason (string - detailed scientific explanation)
-        - productivityBenefit (string - economic outlook including potential Mandi price in ₹)
-        
-        Ensure the language is {data.get('language', 'English')}.
+        Requirements:
+        1. Predict the single best crop.
+        2. Provide a detailed scientific reason.
+        3. Provide productivity benefits including current Mandi rates in ₹ (Rupees) using search for recent accuracy.
+        4. Return as JSON.
+
+        Output Schema:
+        {{
+          "recommendedCrop": "string",
+          "reason": "string",
+          "productivityBenefit": "string"
+        }}
         """
         
-        model = genai.GenerativeModel('gemini-3-flash-preview')
-        response = model.generate_content(
-            prompt,
-            generation_config={"response_mime_type": "application/json"}
+        # Use gemini-3-flash-preview with googleSearch for grounding
+        model = genai.GenerativeModel(
+            model_name='gemini-3-flash-preview',
+            tools=[{'google_search': {}}]
         )
         
-        return jsonify(json.loads(response.text))
+        response = model.generate_content(prompt)
+        
+        # Extract grounding sources if available
+        sources = []
+        if hasattr(response, 'candidates') and response.candidates:
+            metadata = getattr(response.candidates[0], 'grounding_metadata', None)
+            if metadata and hasattr(metadata, 'grounding_chunks'):
+                for chunk in metadata.grounding_chunks:
+                    if hasattr(chunk, 'web') and chunk.web:
+                        sources.append({
+                            "title": chunk.web.title or "Market Report",
+                            "uri": chunk.web.uri
+                        })
+
+        # Parse JSON from text
+        result = json.loads(response.text)
+        result['sources'] = sources
+        
+        return jsonify(result)
     except Exception as e:
         print(f"Prediction Error: {e}")
         return jsonify({"error": str(e)}), 500
@@ -71,10 +95,10 @@ def chat():
         data = request.json
         model = genai.GenerativeModel('gemini-3-flash-preview')
         
-        system_instr = f"You are Bharat Agri-AI Pro, a professional agricultural advisor for Indian farmers. Answer in {data.get('language', 'English')}."
+        instr = f"You are Bharat Agri-AI Pro, a professional expert advisor for Indian agriculture. You are currently speaking with a farmer in {data.get('language', 'English')}."
         response = model.generate_content(
             data.get('message'),
-            generation_config={"system_instruction": system_instr}
+            generation_config={"system_instruction": instr}
         )
         return jsonify({"text": response.text})
     except Exception as e:
